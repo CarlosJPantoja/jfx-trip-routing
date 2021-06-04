@@ -1,6 +1,8 @@
-package ui;
+package model;
 
 import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
@@ -9,22 +11,36 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.PriorityQueue;
 
-import model.Road;
-
-public class MainGUI {
-
+public class Graph {
 	private ArrayList<ArrayList<Integer>> matrix = new ArrayList<ArrayList<Integer>>();
+	private ArrayList<Road> bows = new ArrayList<Road>();
+	
 	private ArrayList<ArrayList<String>> roads = new ArrayList<ArrayList<String>>();
-	private ArrayList<ArrayList<String>> miles = new ArrayList<ArrayList<String>>();
+	private ArrayList<ArrayList<String>> distances = new ArrayList<ArrayList<String>>();
 	private ArrayList<ArrayList<String>> duocities = new ArrayList<ArrayList<String>>();
 	private ArrayList<String> cities = new ArrayList<>();
-	private ArrayList<Road> bows = new ArrayList<Road>();
-
-	public static void main(String[] args) throws IOException {	
-		MainGUI m = new MainGUI();
-		m.menu();
+	
+	public Graph() {
+		
 	}
-
+	
+	public Graph(String URL) throws IOException, NumberFormatException, IndexOutOfBoundsException {
+		BufferedReader br = new BufferedReader(new FileReader(URL));
+		String line = br.readLine();
+		while(line != null && !line.equals("")) {
+			String[] input = line.split(", ");
+			add(input[0], input[1], input[2], Integer.parseInt(input[3]));
+			bows.add(new Road(into(input[0]), into(input[1]), input[2], Integer.parseInt(input[3])));
+			line = br.readLine();
+		}
+		br.close();
+	}
+	
+	public void addRoute(String from, String to, String route, int miles) {
+		add(from, to, route, miles);
+		bows.add(new Road(into(from), into(to), route, miles));
+	}
+	
 	private void menu() throws IOException {
 		BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
 		String msg = "";
@@ -52,7 +68,7 @@ public class MainGUI {
 			int j = into(input[1]);
 			msg += "\n\n\nFrom                 To                   Route      Miles\n-------------------- -------------------- ---------- -----\n";
 			String[] rds = roads.get(i).get(j).split(" ");
-			String[] mls = miles.get(i).get(j).split(" ");
+			String[] mls = distances.get(i).get(j).split(" ");
 			String[] cts = duocities.get(i).get(j).split("=");
 			for(int k=0; k<rds.length; k++) {
 				msg += ajust(cts[k], 41)+" "+ajust(rds[k], 10)+" "+ajustL(mls[k], 5)+"\n";
@@ -99,7 +115,7 @@ public class MainGUI {
 					if(temp2<temp1) {
 						matrix.get(i).set(j, temp2);
 						roads.get(i).set(j, (roads.get(i).get(k).trim()+" "+roads.get(k).get(j).trim()).trim());
-						miles.get(i).set(j, (miles.get(i).get(k).trim()+" "+miles.get(k).get(j).trim()).trim());
+						distances.get(i).set(j, (distances.get(i).get(k).trim()+" "+distances.get(k).get(j).trim()).trim());
 						duocities.get(i).set(j, (duocities.get(i).get(k).trim()+"="+duocities.get(k).get(j).trim()).trim());
 					}
 				}
@@ -182,7 +198,7 @@ public class MainGUI {
 		if(matrix.get(i).get(j)>mls) {
 			matrix.get(i).set(j, mls);
 			roads.get(i).set(j, route);
-			miles.get(i).set(j, mls+"");
+			distances.get(i).set(j, mls+"");
 			duocities.get(i).set(j, ajust(cities.get(i), 20)+" "+cities.get(j));
 		}
 	}
@@ -192,7 +208,7 @@ public class MainGUI {
 		if(n==-1) {
 			matrix.add(new ArrayList<Integer>());
 			roads.add(new ArrayList<String>());
-			miles.add(new ArrayList<String>());
+			distances.add(new ArrayList<String>());
 			duocities.add(new ArrayList<String>());
 			cities.add(city);
 			resize();
@@ -217,7 +233,7 @@ public class MainGUI {
 				else
 					matrix.get(i).add(1000000);
 				roads.get(i).add("");
-				miles.get(i).add("");
+				distances.get(i).add("");
 				duocities.get(i).add("");
 			}
 		}
