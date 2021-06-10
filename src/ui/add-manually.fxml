@@ -9,7 +9,6 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-
 <VBox alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1">
    <children>
       <Label text="Trip Routing">
@@ -34,7 +33,7 @@
             <Insets />
          </VBox.margin>
       </Label>
-      <Label alignment="CENTER" text="Note: if you already added routes from a CSV, these will be kept">
+      <Label alignment="CENTER" text="Note: if you have already added routes, these will be kept">
          <font>
             <Font name="Consolas" size="14.0" />
          </font>
@@ -126,7 +125,7 @@
                   <Insets right="3.0" />
                </HBox.margin>
             </Button>
-            <Button defaultButton="true" mnemonicParsing="false" style="-fx-background-color: #1c74ec;" text="Next" textFill="WHITE">
+            <Button defaultButton="true" mnemonicParsing="false" onAction="#next" style="-fx-background-color: #1c74ec;" text="Next" textFill="WHITE">
                <font>
                   <Font name="Consolas Bold" size="14.0" />
                </font>

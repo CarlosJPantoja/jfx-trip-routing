@@ -1,29 +1,22 @@
 package model;
 
 import java.io.BufferedReader;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.PriorityQueue;
 
 public class Graph {
-	private ArrayList<ArrayList<Integer>> matrix = new ArrayList<ArrayList<Integer>>();
+	private ArrayList<ArrayList<Road>> matrix = new ArrayList<ArrayList<Road>>();
 	private ArrayList<Road> bows = new ArrayList<Road>();
-	
-	private ArrayList<ArrayList<String>> roads = new ArrayList<ArrayList<String>>();
-	private ArrayList<ArrayList<String>> distances = new ArrayList<ArrayList<String>>();
-	private ArrayList<ArrayList<String>> duocities = new ArrayList<ArrayList<String>>();
-	private ArrayList<String> cities = new ArrayList<>();
-	
+	private ArrayList<String> nodes = new ArrayList<>();
+
 	public Graph() {
-		
+
 	}
-	
+
 	public Graph(String URL) throws IOException, NumberFormatException, IndexOutOfBoundsException {
 		BufferedReader br = new BufferedReader(new FileReader(URL));
 		String line = br.readLine();
@@ -35,156 +28,10 @@ public class Graph {
 		}
 		br.close();
 	}
-	
+
 	public void addRoute(String from, String to, String route, int miles) {
 		add(from, to, route, miles);
 		bows.add(new Road(into(from), into(to), route, miles));
-	}
-	
-	private void menu() throws IOException {
-		BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
-		String msg = "";
-		String line = reader.readLine();
-		while(!line.equals("") && line != null) {
-			String[] input = line.split(",");
-			add(input[0], input[1], input[2], Integer.parseInt(input[3]));
-			bows.add(new Road(into(input[0]), into(input[1]), input[2], Integer.parseInt(input[3])));
-			line = reader.readLine();
-		}
-		System.out.println("\n\n Kruskal");
-		kruskal();
-		System.out.println("\n\n Dijkistra");
-		for(int i = 0; i<matrix.size(); i++)
-			System.out.println(Arrays.toString(dijkistra(i)));
-		System.out.println("\n\n Prim");
-		array(AlgPrim());
-		floyd();
-		System.out.println("\n\n Floyd");
-		print();
-		line = reader.readLine();
-		while(!line.equals("") && line != null) {
-			String[] input = line.split(",");
-			int i = into(input[0]);
-			int j = into(input[1]);
-			msg += "\n\n\nFrom                 To                   Route      Miles\n-------------------- -------------------- ---------- -----\n";
-			String[] rds = roads.get(i).get(j).split(" ");
-			String[] mls = distances.get(i).get(j).split(" ");
-			String[] cts = duocities.get(i).get(j).split("=");
-			for(int k=0; k<rds.length; k++) {
-				msg += ajust(cts[k], 41)+" "+ajust(rds[k], 10)+" "+ajustL(mls[k], 5)+"\n";
-			}
-			msg += "     				                     -----\n                                          Total      "+ajustL(matrix.get(i).get(j)+"", 5);
-			line = reader.readLine();
-		}
-		System.out.println(msg);
-		reader.close();
-	}
-
-	public void print() {
-		String msg = "";
-		for(int i=0; i<matrix.size(); i++) {
-			for(int j=0; j<matrix.size(); j++) {
-				msg += matrix.get(i).get(j) + " ";
-			}
-			msg += "\n";
-		}
-		System.out.println(msg);
-	}
-
-	private String ajust(String msg, int n) {
-		for(int i=msg.length(); i<n; i++) {
-			msg += " ";
-		}
-		return msg;
-	}
-
-	private String ajustL(String msg, int n) {
-		for(int i=msg.length(); i<n; i++) {
-			msg = " "+msg;
-		}
-		return msg;
-	}
-
-	private void floyd(){
-		int temp1, temp2;
-		for(int k=0; k<cities.size(); k++){
-			for(int i=0; i<cities.size(); i++){
-				for (int j=0; j<cities.size(); j++){
-					temp1 = matrix.get(i).get(j);
-					temp2 = matrix.get(i).get(k) + matrix.get(k).get(j);
-					if(temp2<temp1) {
-						matrix.get(i).set(j, temp2);
-						roads.get(i).set(j, (roads.get(i).get(k).trim()+" "+roads.get(k).get(j).trim()).trim());
-						distances.get(i).set(j, (distances.get(i).get(k).trim()+" "+distances.get(k).get(j).trim()).trim());
-						duocities.get(i).set(j, (duocities.get(i).get(k).trim()+"="+duocities.get(k).get(j).trim()).trim());
-					}
-				}
-			}
-		}
-	}
-
-	public int[] dijkistra(int k) {
-		int[] mls = new int[matrix.size()];
-		for(int i=0; i<matrix.size(); i++)
-			mls[i] = 1000000;
-		mls[k] = 0;
-		PriorityQueue<Integer> pila = new PriorityQueue<>();
-		pila.add(k);
-		while (!pila.isEmpty()) {
-			int i = pila.poll();
-			for (int j = 0; j < matrix.size(); j++) {
-				if (matrix.get(i).get(j) != 0) {
-					if (mls[j] > mls[i] + matrix.get(i).get(j)) {
-						mls[j] = mls[i] + matrix.get(i).get(j);
-						pila.add(j);
-					}
-				}
-			}
-		}
-		return mls;
-	}
-
-	private void kruskal() {
-		int fathers[] = new int[matrix.size()];
-		for(int i=0;i<matrix.size();i++){
-			fathers[i]=i;
-		}
-		int n = matrix.size();
-		int m = bows.size();
-		int mst_weight = 0, mst_edges = 0;
-		int	mst_ni = 0;
-		Collections.sort(bows, new Comparator<Road>() {
-			@Override 
-			public int compare(Road p1, Road p2) {
-				return p1.getMiles() - p2.getMiles();
-			}
-		});
-		while( ( mst_edges < n-1) || (mst_ni < m) ){
-			int a = bows.get(mst_ni).getFrom();
-			int b = bows.get(mst_ni).getTo();
-			int w = bows.get(mst_ni).getMiles();
-			if( find(a, fathers) != find(b, fathers) ) {
-				unite(a,b, fathers);
-				mst_weight += w;
-				System.out.println(cities.get(a) + " " + cities.get(b) + " " + w);
-				mst_edges++;
-			}
-			mst_ni++;
-		}
-		System.out.println( "\nWeight of the MST is " + mst_weight);
-	}
-
-	int find(int x, int[] fathers){
-		if(fathers[x] == x){
-			return x;
-		}
-		return find(fathers[x], fathers);
-	}
-
-	void unite(int x, int y, int[] fathers){
-		int fx = find(x, fathers);
-		int fy = find(y, fathers);
-		fathers[fx] = fy;
 	}
 
 	private void add(String from, String to, String route, int miles) {
@@ -194,107 +41,258 @@ public class Graph {
 		replace(route, miles, j, i);	
 	}
 
-	private void replace(String route, int mls, int i, int j) {
-		if(matrix.get(i).get(j)>mls) {
-			matrix.get(i).set(j, mls);
-			roads.get(i).set(j, route);
-			distances.get(i).set(j, mls+"");
-			duocities.get(i).set(j, ajust(cities.get(i), 20)+" "+cities.get(j));
-		}
-	}
-
 	private int config(String city) {
 		int n = into(city);
 		if(n==-1) {
-			matrix.add(new ArrayList<Integer>());
-			roads.add(new ArrayList<String>());
-			distances.add(new ArrayList<String>());
-			duocities.add(new ArrayList<String>());
-			cities.add(city);
+			matrix.add(new ArrayList<Road>());
+			nodes.add(city);
 			resize();
-			n = cities.size()-1;
+			n = nodes.size()-1;
 		}
 		return n;
 	}
 
 	private int into(String city) {
-		for(int i=0; i<cities.size(); i++) {
-			if(city.equals(cities.get(i)))
+		for(int i=0; i<nodes.size(); i++) {
+			if(city.equals(nodes.get(i)))
 				return i;
 		}
 		return -1;
 	}
 
 	private void resize() {
-		for(int i=0; i<cities.size(); i++) {
-			for(int j=matrix.get(i).size(); j<cities.size(); j++) {
+		for(int i=0; i<nodes.size(); i++) {
+			for(int j=matrix.get(i).size(); j<nodes.size(); j++) {
 				if(i==j)
-					matrix.get(i).add(0);
+					matrix.get(i).add(new Road(i, j, "", 0));
 				else
-					matrix.get(i).add(1000000);
-				roads.get(i).add("");
-				distances.get(i).add("");
-				duocities.get(i).add("");
+					matrix.get(i).add(new Road(i, j, "", 1000000));
 			}
 		}
+	}
+
+	private void replace(String route, int miles, int i, int j) {
+		if(matrix.get(i).get(j).getMiles()>miles) {
+			matrix.get(i).set(j, new Road(i, j, route, miles));
+		}
+	}
+
+	private int[][] listToArray(){
+		int[][] array = new int[matrix.size()][matrix.size()];
+		for(int i=0; i<matrix.size(); i++) {
+			for(int j=0; j<matrix.size(); j++) {
+				array[i][j] = matrix.get(i).get(j).getMiles();
+			}
+		}
+		return array;
+	}
+
+	private String floyd(int from, int to){
+		int[][] shortest = listToArray();
+		String[][] roads = new String[shortest.length][shortest.length];
+		int temp1, temp2;
+		for(int k=0; k<nodes.size(); k++){
+			for(int i=0; i<nodes.size(); i++){
+				for (int j=0; j<nodes.size(); j++){
+					temp1 = shortest[i][j];
+					temp2 = shortest[i][k] + shortest[k][j];
+					if(temp2<temp1) {
+						shortest[i][j] = temp2;
+						roads[i][j] = isEmpty(roads[i][j], i, j);
+						roads[i][k] = isEmpty(roads[i][k], i, k);
+						roads[k][j] = isEmpty(roads[k][j], k, j);
+						roads[i][j] = roads[i][k].trim() + "  " + roads[k][j].trim();
+					}
+				}
+			}
+		}
+		return roads[from][to];
+	}
+
+	private String isEmpty(String msg, int i, int j) {
+		if(msg==null)
+			return nodes.get(i)+"  "+nodes.get(j);
+		else
+			return msg;
+	}
+
+	private String dijkstra(int from, int to) {
+		String[] roads = new String[matrix.size()];
+		int[] miles = new int[matrix.size()];
+		for(int i=0; i<matrix.size(); i++)
+			miles[i] = 1000000;
+		miles[from] = 0;
+		PriorityQueue<Integer> queue = new PriorityQueue<>();
+		queue.add(from);
+		while (!queue.isEmpty()) {
+			int i = queue.poll();
+			for (int j = 0; j < matrix.size(); j++) {
+				if (matrix.get(i).get(j).getMiles() != 0) {
+					if (miles[j] > miles[i] + matrix.get(i).get(j).getMiles()) {
+						roads[j] = isEmpty(roads[j], i, j);
+						roads[i] = isEmpty(roads[i], i, i);
+						roads[j] = roads[i] + "  " + nodes.get(matrix.get(i).get(j).getFrom()) + "  " + nodes.get(matrix.get(i).get(j).getTo());
+						miles[j] = miles[i] + matrix.get(i).get(j).getMiles();
+						queue.add(j);
+					}
+				}
+			}
+		}
+		return roads[to];
+	}
+
+	public String shortestPath(String from, String to, String method) {
+		String msg = "";
+		int i = into(from);
+		int j = into(to);
+		int k = 0;
+		String output = "";
+		long time = System.currentTimeMillis();
+		if(method.equals("Floyd-Warshall")) {
+			output = floyd(i, j);
+			output = isEmpty(output, i, j);
+			msg += fixCenter("Performed with the Floyd-Warshall algorithm in "+(System.currentTimeMillis()-time)+" ms", 58)+"\n\n\n";
+		} else {
+			output = dijkstra(i, j);
+			msg += fixCenter("Performed with the Dijkstra algorithm in "+(System.currentTimeMillis()-time)+" ms", 58)+"\n\n\n";
+			k = 2;
+		}
+		String[] road = output.split("  ");
+		int total = 0;
+		msg += "From                 To                   Route      Miles\n"
+				+ "-------------------- -------------------- ---------- -----\n";
+		for( ; k+1<road.length; k+=2) {
+			Road node = matrix.get(into(road[k])).get(into(road[k+1]));
+			msg += fixRight(road[k], 20)+" "+fixRight(road[k+1], 20)+" "+fixRight(node.getRoute(), 10)+" "+fixLeft(node.getMiles()+"", 5)+"\n";
+			total += node.getMiles();
+		}
+		msg += "                                                     -----\n"
+				+ "                                          Total      "+fixLeft(total+"", 5);
+		return msg;
+	}
+
+	public String kruskal() {
+		String msg = "";
+		long time = System.currentTimeMillis();
+		msg += "From                 To                   Route      Miles\n"
+				+ "-------------------- -------------------- ---------- -----\n";
+		int[] fathers = new int[nodes.size()];
+		for(int i=0; i<nodes.size(); i++)
+			fathers[i] = i;
+		int n = nodes.size();
+		int m = bows.size();
+		int mstWeight = 0, mstEdges = 0, mstNI = 0;
+		Collections.sort(bows, new Comparator<Road>() {
+			@Override 
+			public int compare(Road p1, Road p2) {
+				return p1.getMiles()-p2.getMiles();
+			}
+		});
+		while(mstEdges < n-1 || mstNI < m){
+			int from = bows.get(mstNI).getFrom();
+			int to = bows.get(mstNI).getTo();
+			String route = bows.get(mstNI).getRoute();
+			int miles = bows.get(mstNI).getMiles();
+			if(find(from, fathers) != find(to, fathers)) {
+				unite(from, to, fathers);
+				mstWeight += miles;
+				msg += fixRight(nodes.get(from), 20)+" "+fixRight(nodes.get(to), 20)+" "+fixRight(route, 10)+" "+fixLeft(miles+"", 5)+"\n";
+				mstEdges++;
+			}
+			mstNI++;
+		}
+		msg += "\n\n"+fixCenter("Weight of the MST is " + mstWeight, 58);
+		msg = fixCenter("Performed with the Kruskal algorithm in "+(System.currentTimeMillis()-time)+" ms", 58)+"\n\n\n"+msg;
+		return msg;
+	}
+
+	private int find(int x, int[] fathers){
+		if(fathers[x] == x)
+			return x;
+		return find(fathers[x], fathers);
+	}
+
+	private void unite(int x, int y, int[] fathers){
+		int fx = find(x, fathers);
+		int fy = find(y, fathers);
+		fathers[fx] = fy;
 	}
 	
-	public int[][] AlgPrim() {
-		boolean[] marcados = new boolean[bows.size()];
-		Road vertice = bows.get(0);
-		return AlgPrim(marcados, vertice, new int[matrix.size()][matrix.size()]);
-	}
-	private int[][] AlgPrim(boolean[] marcados, Road vertice, int[][] Final) {
-		marcados[bows.indexOf(vertice)] = true;
-		int aux = -1;
-		if (!TodosMarcados(marcados)) {
-			for (int i = 0; i < marcados.length; i++) {
-				if (marcados[i]) {
-					for (int j = 0; j < matrix.size(); j++) {
-						if (matrix.get(i).get(j) != 0) {
-							if (!marcados[j]) {
-								if (aux == -1) {
-									aux = matrix.get(i).get(j);
-								} else {
-									aux = Math.min(aux, matrix.get(i).get(j));
-								}
-							}
-						}
-					}
-				}
-			}
-			for (int i = 0; i < marcados.length; i++) {
-				if (marcados[i]) {
-					for (int j = 0; j < matrix.size(); j++) {
-						if (matrix.get(i).get(j) == aux) {
-							if (!marcados[j]) {
-								Final[i][j] = aux;
-								Final[j][i] = aux;
-								return AlgPrim(marcados, bows.get(j), Final);
-							}
-						}
-					}
-				}
-			}
+	private int minKey(int key[], Boolean mstSet[]) {
+        int min = Integer.MAX_VALUE, index = -1;
+        for (int i=0; i<nodes.size(); i++)
+            if (mstSet[i] == false && key[i] < min) {
+                min = key[i];
+                index = i;
+            }
+        return index;
+    }
+    public String prim() {
+    	long time = System.currentTimeMillis();
+    	int graph[][] = listToArray();
+        int parent[] = new int[nodes.size()];
+        int key[] = new int[nodes.size()];
+        Boolean mstSet[] = new Boolean[nodes.size()];
+        for(int i = 0; i < nodes.size(); i++) {
+            key[i] = Integer.MAX_VALUE;
+            mstSet[i] = false;
+        }
+        key[0] = 0;
+        parent[0] = -1;
+        for(int i=0; i<nodes.size()-1; i++) {
+            int u = minKey(key, mstSet);
+            mstSet[u] = true;
+            for (int j=0; j<nodes.size(); j++)
+                if (graph[u][j] != 0 && mstSet[j] == false && graph[u][j] < key[j]) {
+                    parent[j] = u;
+                    key[j] = graph[u][j];
+                }
+        }
+        return printMST(parent, graph, time);
+    }
+    
+    private String printMST(int parent[], int graph[][], long time) {
+    	String msg = "From                 To                   Route      Miles\n"
+				   + "-------------------- -------------------- ---------- -----\n";
+        int total = 0;
+        for (int i = 1; i < nodes.size(); i++) {
+            msg += fixRight(nodes.get(parent[i]), 20)+" "+fixRight(nodes.get(i), 20)+" "
+            	+fixRight(matrix.get(i).get(parent[i]).getRoute(), 10)+" "+fixLeft(graph[i][parent[i]]+"", 5)+"\n";
+            total += graph[i][parent[i]];
+        }
+        msg += "\n\n"+fixCenter("Weight of the MST is " + total, 58);
+        msg = fixCenter("Performed with the Prim algorithm in "+(System.currentTimeMillis()-time)+" ms", 58)+"\n\n\n"+msg;
+        return msg;
+    }
+  	
+    
+	private String fixRight(String msg, int n) {
+		for(int i=msg.length(); i<n; i++) {
+			msg += " ";
 		}
-		return Final;
+		return msg;
 	}
-	public boolean TodosMarcados(boolean[] vertice) { 
-		for (boolean b : vertice) {
-			if (!b) {
-				return b;
-			}
+
+	private String fixLeft(String msg, int n) {
+		for(int i=msg.length(); i<n; i++) {
+			msg = " "+msg;
 		}
-		return true;
+		return msg;
 	}
-	private void array(int[][] matrix) {
-		String msg = "";
-		for(int i=0; i<matrix.length; i++) {
-			for(int j=0; j<matrix.length; j++) {
-				msg += matrix[i][j] + " ";
-			}
-			msg += "\n";
+	
+	private String fixCenter(String msg, int n) {
+		boolean aux = false;
+		for(int i=msg.length(); i<n; i++) {
+			if(aux)
+				msg = " "+msg;
+			else
+				msg += " ";
+			aux = !aux;
 		}
-		System.out.println(msg);
+		return msg;
+	}
+
+	public ArrayList<String> getNodes(){
+		return nodes;
 	}
 }

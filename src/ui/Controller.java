@@ -10,6 +10,7 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Alert.AlertType;
+import javafx.scene.control.ComboBox;
 import javafx.scene.image.Image;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
@@ -24,6 +25,8 @@ public class Controller {
 	private Label warning;
 	@FXML
 	private TextField URL, from, to, route, miles;
+	@FXML
+	private ComboBox<String> chooseFrom, chooseTo, sptAlgorithm;
 	
 	private Graph graph;
 	private Stage stage;
@@ -78,12 +81,23 @@ public class Controller {
 		if(!isEmpty(URL)) {
 			try {
 				graph = new Graph(URL.getText().trim());
+				loader("menu.fxml");
 			} catch(NumberFormatException | IndexOutOfBoundsException e) {
 				launchAlert("The file does not have the indicated format");
 			}
 		} else {
 			launchAlert("Choose a file");
 		}
+	}
+	
+	@FXML
+	public void backMenu(ActionEvent event) throws IOException {
+		loader("menu.fxml");
+	}
+	
+	@FXML
+	public void back(ActionEvent event) throws IOException {
+		loader("add-from-csv.fxml");
 	}
 	
 	@FXML
@@ -99,6 +113,50 @@ public class Controller {
 		} else {
 			launchAlert("Fill in all the boxes");
 		}
+	}
+	
+	@FXML
+	public void shortestPath(ActionEvent event) throws IOException {
+		loader("shortest-path.fxml");
+		sptAlgorithm.getItems().addAll("Floyd-Warshall", "Dijkstra");
+		sptAlgorithm.setValue("Floyd-Warshall");
+		for(int i=0; i<graph.getNodes().size(); i++) {
+			chooseFrom.getItems().add(graph.getNodes().get(i));
+			chooseTo.getItems().add(graph.getNodes().get(i));
+		}
+	}
+	
+	@FXML
+	public void shortestPathTree(ActionEvent event) throws IOException {
+		if(chooseFrom.getValue()!=null && chooseTo.getValue()!=null && !chooseFrom.getValue().equals(chooseTo.getValue()))
+			launchAlert(graph.shortestPath(chooseFrom.getValue(), chooseTo.getValue(), sptAlgorithm.getValue()));
+		else
+			launchAlert("From and To cannot be the same or be empty");
+	}
+	
+	@FXML
+	public void minimumSpanning(ActionEvent event) throws IOException {
+		loader("minimum-spanning.fxml");
+		sptAlgorithm.getItems().addAll("Kruskal", "Prim");
+		sptAlgorithm.setValue("Kruskal");
+	}
+	
+	@FXML
+	public void next(ActionEvent event) throws IOException {
+		if(graph.getNodes().size()>=2) {
+			loader("menu.fxml");
+		} else {
+			launchAlert("Enter paths first");
+		}
+		
+	}
+	
+	@FXML
+	public void minimumSpanningTree(ActionEvent event) throws IOException {
+		if(sptAlgorithm.getValue().equals("Kruskal"))
+			launchAlert(graph.kruskal());
+		else
+			launchAlert(graph.prim());
 	}
 	
 	public Controller() {
@@ -123,6 +181,4 @@ public class Controller {
 	public void setStage(Stage s) {
 		stage = s;
 	}
-	
-	//C:\Users\Carlos\OneDrive\Documentos\Eclipse\eclipse-workspace\jfx-trip-routing\data\data.csv
 }
